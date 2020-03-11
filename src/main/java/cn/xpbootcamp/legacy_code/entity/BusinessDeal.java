@@ -115,32 +115,25 @@ public class BusinessDeal {
     public boolean execute(RedisDistributedLock redisLock, WalletService walletService) throws InvalidTransactionException {
         validateTxParams();
         if (status == Status.EXECUTED) return true;
-        boolean isLocked = false;
+        boolean isLocked = redisLock.lock(id);
         try {
-            isLocked = redisLock.lock(id);
-
             if (!isLocked) {
                 return false;
             }
-            if (status == Status.EXECUTED) return true; // double check
-            if (currentTimeMillis - createdTimestamp > EXPIRED_TIME) {
-                this.status = Status.EXPIRED;
-                return false;
-            }
-            String walletTransactionId = walletService.moveMoney(id, buyerId, sellerId, amount);
-            if (walletTransactionId != null) {
-                this.walletTransactionId = walletTransactionId;
-                this.status = Status.EXECUTED;
-                return true;
-            } else {
-                this.status = Status.FAILED;
-                return false;
-            }
+            return handleTransaction(walletService);
         } finally {
             if (isLocked) {
                 redisLock.unlock(id);
             }
         }
+    }
+
+    private boolean handleTransaction(WalletService walletService) {
+        if (status == Status.EXECUTED) return true; // double check
+        if (currentTimeMillis - createdTimestamp > EXPIRED_TIME) {
+            return false;
+        }
+        return walletService.moveMoney(id, buyerId, sellerId, amount) != null;
     }
 
     private void validateTxParams() throws InvalidTransactionException {
