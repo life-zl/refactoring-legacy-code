@@ -18,8 +18,17 @@ public class WalletTransaction {
     private Double amount;
     private STATUS status;
     private String walletTransactionId;
+    private long currentTimeMillis;
     private RedisDistributedLock redisLock;
+    private WalletService walletService;
 
+    public WalletService getWalletService() {
+        return walletService;
+    }
+
+    public void setWalletService(WalletService walletService) {
+        this.walletService = walletService;
+    }
 
     public WalletTransaction(String preAssignedId, Long buyerId, Long sellerId, Long productId, String orderId, RedisDistributedLock redisLock) {
         if (preAssignedId != null && !preAssignedId.isEmpty()) {
@@ -53,13 +62,11 @@ public class WalletTransaction {
                 return false;
             }
             if (status == STATUS.EXECUTED) return true; // double check
-            long executionInvokedTimestamp = System.currentTimeMillis();
             // 交易超过20天
-            if (executionInvokedTimestamp - createdTimestamp > 1728000000) {
+            if (currentTimeMillis - createdTimestamp > 1728000000) {
                 this.status = STATUS.EXPIRED;
                 return false;
             }
-            WalletService walletService = new WalletServiceImpl();
             String walletTransactionId = walletService.moveMoney(id, buyerId, sellerId, amount);
             if (walletTransactionId != null) {
                 this.walletTransactionId = walletTransactionId;
@@ -154,5 +161,13 @@ public class WalletTransaction {
 
     public void setRedisLock(RedisDistributedLock redisLock) {
         this.redisLock = redisLock;
+    }
+
+    public long getCurrentTimeMillis() {
+        return currentTimeMillis;
+    }
+
+    public void setCurrentTimeMillis(long currentTimeMillis) {
+        this.currentTimeMillis = currentTimeMillis;
     }
 }
