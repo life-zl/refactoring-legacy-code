@@ -1,14 +1,9 @@
 package cn.xpbootcamp.legacy_code.entity;
 
 import cn.xpbootcamp.legacy_code.enums.Status;
-import cn.xpbootcamp.legacy_code.service.WalletService;
 import cn.xpbootcamp.legacy_code.utils.IdGenerator;
-import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
-
-import javax.transaction.InvalidTransactionException;
 
 public class BusinessDeal {
-    public static final int EXPIRED_TIME = 20 * 24 * 60 * 60;
     private String id;
     private Long buyerId;
     private Long sellerId;
@@ -112,33 +107,4 @@ public class BusinessDeal {
         this.currentTimeMillis = currentTimeMillis;
     }
 
-    public boolean execute(RedisDistributedLock redisLock, WalletService walletService) throws InvalidTransactionException {
-        validateTxParams();
-        if (status == Status.EXECUTED) return true;
-        boolean isLocked = redisLock.lock(id);
-        try {
-            if (!isLocked) {
-                return false;
-            }
-            return handleTransaction(walletService);
-        } finally {
-            if (isLocked) {
-                redisLock.unlock(id);
-            }
-        }
-    }
-
-    private boolean handleTransaction(WalletService walletService) {
-        if (status == Status.EXECUTED) return true; // double check
-        if (currentTimeMillis - createdTimestamp > EXPIRED_TIME) {
-            return false;
-        }
-        return walletService.moveMoney(id, buyerId, sellerId, amount) != null;
-    }
-
-    private void validateTxParams() throws InvalidTransactionException {
-        if (buyerId == null || (sellerId == null || amount < 0.0)) {
-            throw new InvalidTransactionException("This is an invalid transaction");
-        }
-    }
 }

@@ -19,7 +19,30 @@ public class WalletTransaction {
 
 
     public boolean execute(BusinessDeal deal) throws InvalidTransactionException {
-        return deal.execute(redisLock, walletService);
+        validateDealParms(deal);
+        if (isExecuted(deal)) return true;
+        boolean isLocked = redisLock.lock(deal.getId());
+        try {
+            if (isExecuted(deal)) return true;
+            if (!isLocked) {
+                return false;
+            }
+            return walletService.handleTransaction(deal);
+        } finally {
+            if (isLocked) {
+                redisLock.unlock(deal.getId());
+            }
+        }
+    }
+
+    private boolean isExecuted(BusinessDeal deal) {
+        return deal.getStatus() == Status.EXECUTED;
+    }
+
+    private void validateDealParms(BusinessDeal deal) throws InvalidTransactionException {
+        if (deal.getBuyerId() == null || (deal.getSellerId() == null || deal.getAmount() < 0.0)) {
+            throw new InvalidTransactionException("This is an invalid transaction");
+        }
     }
 
 }

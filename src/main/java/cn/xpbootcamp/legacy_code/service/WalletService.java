@@ -1,5 +1,8 @@
 package cn.xpbootcamp.legacy_code.service;
 
+import cn.xpbootcamp.legacy_code.entity.BusinessDeal;
+
 public interface WalletService {
-    String moveMoney(String id, long buyerId, long sellerId, double amount);
+
+    boolean handleTransaction(BusinessDeal deal);
 }

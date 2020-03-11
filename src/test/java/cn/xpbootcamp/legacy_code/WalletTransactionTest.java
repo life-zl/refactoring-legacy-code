@@ -53,7 +53,7 @@ public class WalletTransactionTest {
     }
 
     @Test
-    void status_is_exchanged__execute__return_true() throws InvalidTransactionException {
+    void status_is_executed__execute__return_true() throws InvalidTransactionException {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
 
@@ -65,19 +65,19 @@ public class WalletTransactionTest {
     }
 
     @Test
-    void status_is_unExchanged_and_expired_is_true__execute__return_false() throws InvalidTransactionException {
+    void status_is_unExecuted_and_expired_is_true__execute__return_false() throws InvalidTransactionException {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
 
 
-        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock, null);
+        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock,
+                getWalletService(mockUserRepository(new User(1, 10.0))));
         BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
         businessDeal.setAmount(1.0);
         businessDeal.setCurrentTimeMillis(1728001111L);
         businessDeal.setCreatedTimestamp(0L);
 
         assertFalse(walletTransaction.execute(businessDeal));
-        assertEquals(Status.EXPIRED, businessDeal.getStatus());
     }
 
 
@@ -92,7 +92,7 @@ public class WalletTransactionTest {
 
         BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
         businessDeal.setAmount(1.0);
-        businessDeal.setCurrentTimeMillis(1728001111L);
+        businessDeal.setCurrentTimeMillis(0L);
         businessDeal.setCreatedTimestamp(1728001111L);
 
         assertTrue(walletTransaction.execute(businessDeal));
