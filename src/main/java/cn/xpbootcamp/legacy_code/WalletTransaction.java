@@ -17,9 +17,8 @@ public class WalletTransaction {
         this.walletService = walletService;
     }
 
-
     public boolean execute(BusinessDeal deal) throws InvalidTransactionException {
-        validateDealParms(deal);
+        validateDealParams(deal);
         if (isExecuted(deal)) return true;
         boolean isLocked = redisLock.lock(deal.getId());
         try {
@@ -39,8 +38,8 @@ public class WalletTransaction {
         return deal.getStatus() == Status.EXECUTED;
     }
 
-    private void validateDealParms(BusinessDeal deal) throws InvalidTransactionException {
-        if (deal.getBuyerId() == null || (deal.getSellerId() == null || deal.getAmount() < 0.0)) {
+    private void validateDealParams(BusinessDeal deal) throws InvalidTransactionException {
+        if (deal.getBuyerId() == null || deal.getSellerId() == null || deal.getAmount() < 0.0) {
             throw new InvalidTransactionException("This is an invalid transaction");
         }
     }
