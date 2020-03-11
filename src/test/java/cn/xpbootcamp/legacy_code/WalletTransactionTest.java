@@ -1,7 +1,7 @@
 package cn.xpbootcamp.legacy_code;
 
 import cn.xpbootcamp.legacy_code.entity.User;
-import cn.xpbootcamp.legacy_code.enums.STATUS;
+import cn.xpbootcamp.legacy_code.enums.Status;
 import cn.xpbootcamp.legacy_code.repository.UserRepository;
 import cn.xpbootcamp.legacy_code.service.WalletService;
 import cn.xpbootcamp.legacy_code.service.WalletServiceImpl;
@@ -55,7 +55,7 @@ public class WalletTransactionTest {
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
         WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", redisDistributedLock);
         walletTransaction.setAmount(1.0);
-        walletTransaction.setStatus(STATUS.EXECUTED);
+        walletTransaction.setStatus(Status.EXECUTED);
 
         assertTrue(walletTransaction.execute());
     }
@@ -70,7 +70,7 @@ public class WalletTransactionTest {
         walletTransaction.setCreatedTimestamp(0L);
 
         assertFalse(walletTransaction.execute());
-        assertEquals(STATUS.EXPIRED, walletTransaction.getStatus());
+        assertEquals(Status.EXPIRED, walletTransaction.getStatus());
     }
 
 
