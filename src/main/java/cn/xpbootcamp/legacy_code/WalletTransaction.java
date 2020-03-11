@@ -18,9 +18,10 @@ public class WalletTransaction {
     private Double amount;
     private STATUS status;
     private String walletTransactionId;
+    private RedisDistributedLock redisLock;
 
 
-    public WalletTransaction(String preAssignedId, Long buyerId, Long sellerId, Long productId, String orderId) {
+    public WalletTransaction(String preAssignedId, Long buyerId, Long sellerId, Long productId, String orderId, RedisDistributedLock redisLock) {
         if (preAssignedId != null && !preAssignedId.isEmpty()) {
             this.id = preAssignedId;
         } else {
@@ -35,6 +36,7 @@ public class WalletTransaction {
         this.orderId = orderId;
         this.status = STATUS.TO_BE_EXECUTED;
         this.createdTimestamp = System.currentTimeMillis();
+        this.redisLock = redisLock;
     }
 
     public boolean execute() throws InvalidTransactionException {
@@ -44,7 +46,7 @@ public class WalletTransaction {
         if (status == STATUS.EXECUTED) return true;
         boolean isLocked = false;
         try {
-            isLocked = RedisDistributedLock.getSingletonInstance().lock(id);
+            isLocked = redisLock.lock(id);
 
             // 锁定未成功，返回false
             if (!isLocked) {
@@ -69,9 +71,88 @@ public class WalletTransaction {
             }
         } finally {
             if (isLocked) {
-                RedisDistributedLock.getSingletonInstance().unlock(id);
+                redisLock.unlock(id);
             }
         }
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Long getBuyerId() {
+        return buyerId;
+    }
+
+    public void setBuyerId(Long buyerId) {
+        this.buyerId = buyerId;
+    }
+
+    public Long getSellerId() {
+        return sellerId;
+    }
+
+    public void setSellerId(Long sellerId) {
+        this.sellerId = sellerId;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
+    public Long getCreatedTimestamp() {
+        return createdTimestamp;
+    }
+
+    public void setCreatedTimestamp(Long createdTimestamp) {
+        this.createdTimestamp = createdTimestamp;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public STATUS getStatus() {
+        return status;
+    }
+
+    public void setStatus(STATUS status) {
+        this.status = status;
+    }
+
+    public String getWalletTransactionId() {
+        return walletTransactionId;
+    }
+
+    public void setWalletTransactionId(String walletTransactionId) {
+        this.walletTransactionId = walletTransactionId;
+    }
+
+    public RedisDistributedLock getRedisLock() {
+        return redisLock;
+    }
+
+    public void setRedisLock(RedisDistributedLock redisLock) {
+        this.redisLock = redisLock;
+    }
 }
