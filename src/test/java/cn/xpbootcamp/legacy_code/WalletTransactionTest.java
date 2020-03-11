@@ -1,5 +1,6 @@
 package cn.xpbootcamp.legacy_code;
 
+import cn.xpbootcamp.legacy_code.entity.BusinessDeal;
 import cn.xpbootcamp.legacy_code.entity.User;
 import cn.xpbootcamp.legacy_code.enums.Status;
 import cn.xpbootcamp.legacy_code.repository.UserRepository;
@@ -21,21 +22,23 @@ public class WalletTransactionTest {
 
     @Test
     void buyerId_is_null__throw_exception() {
-        WalletTransaction walletTransaction = new WalletTransaction("1", null, 1L, 1L, "1", null);
-        assertThrows(InvalidTransactionException.class, walletTransaction::execute);
+        WalletTransaction walletTransaction = new WalletTransaction(null, null);
+        BusinessDeal businessDeal = new BusinessDeal("1", null, 1L, 1L, null, 1.0);
+        assertThrows(InvalidTransactionException.class, () -> walletTransaction.execute(businessDeal));
     }
 
     @Test
     void sellerId_is_null__throw_exception() {
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, null, 1L, "1", null);
-        assertThrows(InvalidTransactionException.class, walletTransaction::execute);
+        WalletTransaction walletTransaction = new WalletTransaction(null, null);
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, null, 1L, null, 1.0);
+        assertThrows(InvalidTransactionException.class, () -> walletTransaction.execute(businessDeal));
     }
 
     @Test
     void amount_is_0__throw_exception() {
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", null);
-        walletTransaction.setAmount(-0.01);
-        assertThrows(InvalidTransactionException.class, walletTransaction::execute);
+        WalletTransaction walletTransaction = new WalletTransaction(null, null);
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, null, -1.0);
+        assertThrows(InvalidTransactionException.class, () -> walletTransaction.execute(businessDeal));
     }
 
     @Test
@@ -43,34 +46,38 @@ public class WalletTransactionTest {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(false);
 
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", redisDistributedLock);
-        walletTransaction.setAmount(1.0);
+        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock, null);
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
 
-        assertFalse(walletTransaction.execute());
+        assertFalse(walletTransaction.execute(businessDeal));
     }
 
     @Test
     void status_is_exchanged__execute__return_true() throws InvalidTransactionException {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", redisDistributedLock);
-        walletTransaction.setAmount(1.0);
-        walletTransaction.setStatus(Status.EXECUTED);
 
-        assertTrue(walletTransaction.execute());
+        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock, null);
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
+        businessDeal.setStatus(Status.EXECUTED);
+
+        assertTrue(walletTransaction.execute(businessDeal));
     }
 
     @Test
     void status_is_unExchanged_and_expired_is_true__execute__return_false() throws InvalidTransactionException {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", redisDistributedLock);
-        walletTransaction.setAmount(1.0);
-        walletTransaction.setCurrentTimeMillis(1728001111L);
-        walletTransaction.setCreatedTimestamp(0L);
 
-        assertFalse(walletTransaction.execute());
-        assertEquals(Status.EXPIRED, walletTransaction.getStatus());
+
+        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock, null);
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
+        businessDeal.setAmount(1.0);
+        businessDeal.setCurrentTimeMillis(1728001111L);
+        businessDeal.setCreatedTimestamp(0L);
+
+        assertFalse(walletTransaction.execute(businessDeal));
+        assertEquals(Status.EXPIRED, businessDeal.getStatus());
     }
 
 
@@ -78,32 +85,36 @@ public class WalletTransactionTest {
     void balance_is_enough__execute__return_true() throws InvalidTransactionException {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", redisDistributedLock);
-        walletTransaction.setAmount(1.0);
-        walletTransaction.setCurrentTimeMillis(1728001111L);
-        walletTransaction.setCreatedTimestamp(1728001111L);
 
-        WalletService walletService = getWalletService(mockUserRepository(new User(1, 10.0)));
+        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock,
+                getWalletService(mockUserRepository(new User(1, 10.0))));
 
-        walletTransaction.setWalletService(walletService);
 
-        assertTrue(walletTransaction.execute());
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
+        businessDeal.setAmount(1.0);
+        businessDeal.setCurrentTimeMillis(1728001111L);
+        businessDeal.setCreatedTimestamp(1728001111L);
+
+        assertTrue(walletTransaction.execute(businessDeal));
     }
 
     @Test
     void balance_is_not_enough__execute__return_false() throws InvalidTransactionException {
 
         when(redisDistributedLock.lock(anyString())).thenReturn(true);
-        WalletTransaction walletTransaction = new WalletTransaction("1", 1L, 1L, 1L, "1", redisDistributedLock);
-        walletTransaction.setAmount(30.0);
-        walletTransaction.setCurrentTimeMillis(1728001111L);
-        walletTransaction.setCreatedTimestamp(1728001111L);
 
-        WalletService walletService = getWalletService(mockUserRepository(new User(1, 10.0)));
+        WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock,
+                getWalletService(mockUserRepository(new User(1, 10.0))));
 
-        walletTransaction.setWalletService(walletService);
 
-        assertFalse(walletTransaction.execute());
+        BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
+        businessDeal.setAmount(30.0);
+        businessDeal.setCurrentTimeMillis(1728001111L);
+        businessDeal.setCreatedTimestamp(1728001111L);
+
+
+
+        assertFalse(walletTransaction.execute(businessDeal));
     }
 
     private WalletServiceImpl getWalletService(UserRepository userRepository) {
