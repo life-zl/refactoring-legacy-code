@@ -15,7 +15,10 @@ public class BusinessDeal {
     private String walletTransactionId;
     private long currentTimeMillis;
 
-    public BusinessDeal(String preAssignedId, Long buyerId, Long sellerId, Long productId, String orderId, Double amount) {
+    public static final int EXPIRED_TIME = 20 * 24 * 60 * 60;
+
+
+    public BusinessDeal(String id, Long buyerId, Long sellerId, Long productId, String orderId, Double amount) {
         this.id = IdGenerator.generateTransactionId();
         if (!this.id.startsWith("t_")) {
             this.id = "t_" + id;
@@ -107,4 +110,7 @@ public class BusinessDeal {
         this.currentTimeMillis = currentTimeMillis;
     }
 
+    public boolean isExpired() {
+        return currentTimeMillis - createdTimestamp > EXPIRED_TIME;
+    }
 }

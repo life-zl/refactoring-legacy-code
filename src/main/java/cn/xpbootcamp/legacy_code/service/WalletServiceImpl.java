@@ -9,7 +9,6 @@ import java.util.UUID;
 
 public class WalletServiceImpl implements WalletService {
 
-    public static final int EXPIRED_TIME = 20 * 24 * 60 * 60;
 
     private final UserRepository userRepository;
 
@@ -19,21 +18,24 @@ public class WalletServiceImpl implements WalletService {
 
 
     public boolean handleTransaction(BusinessDeal deal) {
-        if (deal.getCurrentTimeMillis() - deal.getCreatedTimestamp() > EXPIRED_TIME) {
+        if (deal.isExpired()) {
             return false;
         }
         return moveMoney(deal) != null;
     }
 
-
-    public String moveMoney(BusinessDeal deal) {
+    private String moveMoney(BusinessDeal deal) {
         User buyer = userRepository.find(deal.getBuyerId());
-        if (!(buyer.getBalance() >= deal.getAmount())) {
+        if (isBalanceNotEnough(deal, buyer)) {
             return null;
         }
         User seller = userRepository.find(deal.getSellerId());
-        seller.setBalance(seller.getBalance() + deal.getAmount());
-        buyer.setBalance(buyer.getBalance() - deal.getAmount());
+        seller.increaseBalance(deal.getAmount());
+        buyer.decreaseBalance(deal.getAmount());
         return UUID.randomUUID().toString() + deal.getId();
+    }
+
+    private boolean isBalanceNotEnough(BusinessDeal deal, User buyer) {
+        return buyer.getBalance() < deal.getAmount();
     }
 }
