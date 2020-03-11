@@ -4,7 +4,6 @@ import cn.xpbootcamp.legacy_code.entity.BusinessDeal;
 import cn.xpbootcamp.legacy_code.entity.User;
 import cn.xpbootcamp.legacy_code.enums.Status;
 import cn.xpbootcamp.legacy_code.repository.UserRepository;
-import cn.xpbootcamp.legacy_code.service.WalletService;
 import cn.xpbootcamp.legacy_code.service.WalletServiceImpl;
 import cn.xpbootcamp.legacy_code.utils.RedisDistributedLock;
 import org.junit.jupiter.api.Test;
@@ -106,13 +105,10 @@ public class WalletTransactionTest {
         WalletTransaction walletTransaction = new WalletTransaction(redisDistributedLock,
                 getWalletService(mockUserRepository(new User(1, 10.0))));
 
-
         BusinessDeal businessDeal = new BusinessDeal("1", 1L, 1L, 1L, "1", 1.0);
         businessDeal.setAmount(30.0);
         businessDeal.setCurrentTimeMillis(1728001111L);
         businessDeal.setCreatedTimestamp(1728001111L);
-
-
 
         assertFalse(walletTransaction.execute(businessDeal));
     }
