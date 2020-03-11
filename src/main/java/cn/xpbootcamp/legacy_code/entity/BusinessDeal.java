@@ -2,7 +2,11 @@ package cn.xpbootcamp.legacy_code.entity;
 
 import cn.xpbootcamp.legacy_code.enums.Status;
 import cn.xpbootcamp.legacy_code.utils.IdGenerator;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class BusinessDeal {
     private String id;
     private Long buyerId;
@@ -28,86 +32,6 @@ public class BusinessDeal {
         this.productId = productId;
         this.orderId = orderId;
         this.amount = amount;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Long getBuyerId() {
-        return buyerId;
-    }
-
-    public void setBuyerId(Long buyerId) {
-        this.buyerId = buyerId;
-    }
-
-    public Long getSellerId() {
-        return sellerId;
-    }
-
-    public void setSellerId(Long sellerId) {
-        this.sellerId = sellerId;
-    }
-
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public Long getCreatedTimestamp() {
-        return createdTimestamp;
-    }
-
-    public void setCreatedTimestamp(Long createdTimestamp) {
-        this.createdTimestamp = createdTimestamp;
-    }
-
-    public Double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Double amount) {
-        this.amount = amount;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public String getWalletTransactionId() {
-        return walletTransactionId;
-    }
-
-    public void setWalletTransactionId(String walletTransactionId) {
-        this.walletTransactionId = walletTransactionId;
-    }
-
-    public long getCurrentTimeMillis() {
-        return currentTimeMillis;
-    }
-
-    public void setCurrentTimeMillis(long currentTimeMillis) {
-        this.currentTimeMillis = currentTimeMillis;
     }
 
     public boolean isExpired() {
